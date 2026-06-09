@@ -5,6 +5,7 @@ export interface FontResult {
   risk: "green" | "yellow" | "red";
   explanation: string;
   alternatives: string[];
+  detected_text: string[];
 }
 
 export interface ImageSourceResult {
@@ -51,4 +52,11 @@ export interface FontSearchResult {
   };
   match_type: string;
   score: number;
+}
+
+export type AIProvider = "claude" | "openai" | "deepseek" | "gemini" | "kimi";
+
+export interface UserSettings {
+  aiProvider: AIProvider;
+  apiKey: string;
 }

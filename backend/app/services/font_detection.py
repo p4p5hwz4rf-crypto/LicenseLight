@@ -36,41 +36,48 @@ Output ONLY the JSON array, no other text."""
 def detect_fonts_in_regions(
     image_path: str,
     ocr_results: List[dict],
-    claude_api_key: str,
-    model: str = "claude-3-5-sonnet-20241022",
+    api_key: str,
+    ai_provider: str = "",
+    model: str = "",
 ) -> List[dict]:
     """
     Identify fonts used in each text region of the image.
 
-    Sends the full image to Claude with the font identification prompt.
+    Sends the full image to the AI for font identification.
     Cross-references OCR results for context.
 
     Returns:
         List of dicts:
         [{"text": "...", "font_name": "...", "confidence": 0.9, "serif": false, ...}, ...]
     """
-    if not claude_api_key:
-        logger.warning("No Claude API key; skipping font detection")
+    from app.services.ai_client import is_ai_available
+    ai_ok = is_ai_available(api_key=api_key)
+    logger.info(f"Font detection: ai_available={ai_ok}, api_key={'SET' if api_key else 'EMPTY'}, provider='{ai_provider or '(default)'}'")
+    if not ai_ok:
+        logger.warning("No AI provider configured; skipping font detection")
         return _build_empty_results(ocr_results)
 
-    from app.services.claude_client import call_claude_with_image
+    from app.services.ai_client import call_ai_with_image
 
     try:
-        response = call_claude_with_image(
-            api_key=claude_api_key,
+        logger.info(f"Font detection: calling AI vision (provider={ai_provider or '(default)'})...")
+        response = call_ai_with_image(
+            api_key=api_key,
             image_path=image_path,
             prompt=FONT_DETECTION_PROMPT,
+            provider=ai_provider,
             model=model,
             max_tokens=4096,
             temperature=0.2,
         )
     except Exception as e:
-        logger.error(f"Claude font detection failed: {e}")
+        logger.exception(f"AI font detection FAILED (provider={ai_provider or '(default)'}): {e}")
         return _build_empty_results(ocr_results)
 
     # Parse Claude's JSON response
     try:
         text = response.strip()
+        logger.info(f"AI font detection raw response ({len(text)} chars): {text[:300]}...")
         if text.startswith("```"):
             lines = text.split("\n")
             lines = [l for l in lines if not l.startswith("```")]

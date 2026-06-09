@@ -19,6 +19,7 @@ class FontResult(BaseModel):
     risk: str  # "green", "yellow", "red"
     explanation: str
     alternatives: List[str] = Field(default_factory=list)
+    detected_text: List[str] = Field(default_factory=list)
 
 
 class ImageSourceResult(BaseModel):

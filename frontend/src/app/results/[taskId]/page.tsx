@@ -6,7 +6,8 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { getAnalysisStatus } from "@/lib/api";
 import {
   getRiskLabel,
-  getRiskColor,
+  getRiskBadgeClass,
+  getRiskPillColor,
   getRiskBorderColor,
   getRiskDotClass,
 } from "@/lib/utils";
@@ -83,7 +84,7 @@ export default function ResultsPage() {
       {/* Overall Risk */}
       <div className="text-center">
         <div
-          className={`inline-flex items-center gap-3 px-6 py-3 rounded-full shadow-lg ${getRiskColor(report.overall_risk)}`}
+          className={`inline-flex items-center gap-3 px-6 py-3 rounded-full shadow-md ${getRiskBadgeClass(report.overall_risk)}`}
         >
           <div className={`w-4 h-4 rounded-full ${getRiskDotClass(report.overall_risk)}`} />
           <span className="text-lg font-bold">
@@ -118,7 +119,7 @@ export default function ResultsPage() {
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-bold text-lg">{font.name}</h3>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskColor(font.risk)}`}
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskPillColor(font.risk)}`}
                   >
                     {getRiskLabel(font.risk)}
                   </span>
@@ -153,7 +154,7 @@ export default function ResultsPage() {
           >
             <div className="flex items-center gap-3 mb-2">
               <span
-                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskColor(report.image_source.risk)}`}
+                className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskPillColor(report.image_source.risk)}`}
               >
                 {getRiskLabel(report.image_source.risk)}
               </span>

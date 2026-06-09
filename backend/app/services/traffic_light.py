@@ -35,13 +35,16 @@ def classify_font_risk(
     from app.models.font import Font, FontAlias
 
     classified = []
+    _db_cache = {}  # Cache DB lookups per font name to avoid duplicate queries
 
     for fr in font_results:
         font_name = fr.get("font_name", "Unknown")
         text_sample = fr.get("text", "")
 
-        # Look up in database
-        db_match = _lookup_font_in_db(font_name, db_session)
+        # Use cached DB result if available
+        if font_name not in _db_cache:
+            _db_cache[font_name] = _lookup_font_in_db(font_name, db_session)
+        db_match = _db_cache[font_name]
 
         risk = "yellow"
         explanation = ""

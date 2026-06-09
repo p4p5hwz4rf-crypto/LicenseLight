@@ -4,9 +4,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 import type { UploadResponse, AnalysisStatus, FontSearchResult } from "@/types";
 
-export async function uploadImage(file: File): Promise<UploadResponse> {
+export async function uploadImage(
+  file: File,
+  apiKey?: string,
+  aiProvider?: string,
+): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
+  if (apiKey) formData.append("api_key", apiKey);
+  if (aiProvider) formData.append("ai_provider", aiProvider);
 
   const res = await fetch(`${API_URL}/api/v1/check/image`, {
     method: "POST",

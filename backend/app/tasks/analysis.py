@@ -92,7 +92,7 @@ def analyze_image_task(self, job_id: str, image_path: str):
             report = generate_report(
                 font_risks=font_risks,
                 source_risk=source_risk,
-                claude_api_key=settings.CLAUDE_API_KEY,
+                api_key=settings.CLAUDE_API_KEY,
             )
 
             # Mark complete

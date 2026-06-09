@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Upload, Loader2, ShieldCheck, AlertTriangle, CheckCircle } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { uploadImage, pollAnalysisStatus } from "@/lib/api";
+import { getSettings } from "@/lib/settings";
+import { SettingsPanel } from "@/components/SettingsPanel";
 import {
   getRiskLabel,
-  getRiskColor,
+  getRiskBadgeClass,
+  getRiskPillColor,
   getRiskBorderColor,
   getRiskDotClass,
 } from "@/lib/utils";
-import type { AnalysisStatus, AnalysisReport } from "@/types";
+import type { AnalysisStatus, AnalysisReport, UserSettings } from "@/types";
 
 export default function HomePage() {
   const [isUploading, setIsUploading] = useState(false);
@@ -19,6 +22,12 @@ export default function HomePage() {
   const [progress, setProgress] = useState(0);
   const [report, setReport] = useState<AnalysisReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+
+  // Load saved settings from localStorage on mount
+  useEffect(() => {
+    setUserSettings(getSettings());
+  }, []);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -30,7 +39,12 @@ export default function HomePage() {
     setProgress(0);
 
     try {
-      const uploadRes = await uploadImage(file);
+      const currentSettings = getSettings();
+      const uploadRes = await uploadImage(
+        file,
+        currentSettings?.apiKey,
+        currentSettings?.aiProvider,
+      );
       setTaskId(uploadRes.task_id);
       setStatus("processing");
 
@@ -115,6 +129,16 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Settings Row */}
+      {!taskId && (
+        <div className="flex justify-end mb-4">
+          <SettingsPanel
+            onSettingsChange={(s) => setUserSettings(s)}
+            disabled={isUploading}
+          />
+        </div>
+      )}
+
       {/* Upload Zone */}
       {!taskId && (
         <div
@@ -182,11 +206,11 @@ export default function HomePage() {
           <div className="text-center sticky top-20 z-10">
             <div
               className={`
-                inline-flex items-center gap-3 px-6 py-3 rounded-full shadow-lg
-                ${getRiskColor(report.overall_risk)}
+                inline-flex items-center gap-3 px-6 py-3 rounded-full shadow-md
+                ${getRiskBadgeClass(report.overall_risk)}
               `}
             >
-              <div className={`w-4 h-4 rounded-full ${getRiskDotClass(report.overall_risk)}`} />
+              <div className={`w-3 h-3 rounded-full ${getRiskDotClass(report.overall_risk)}`} />
               <span className="text-lg font-bold">
                 综合风险：{getRiskLabel(report.overall_risk)}
               </span>
@@ -224,7 +248,7 @@ export default function HomePage() {
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-bold text-lg">{font.name}</h3>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskColor(font.risk)}`}
+                            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskPillColor(font.risk)}`}
                           >
                             {getRiskLabel(font.risk)}
                           </span>
@@ -232,6 +256,28 @@ export default function HomePage() {
                         <p className="text-muted-foreground text-sm">
                           {font.explanation}
                         </p>
+                        {font.detected_text && font.detected_text.length > 0 && (
+                          <div className="mt-2">
+                            <span className="text-xs font-semibold text-gray-500">
+                              检测到的文字：
+                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {font.detected_text.slice(0, 8).map((text, j) => (
+                                <span
+                                  key={j}
+                                  className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-mono"
+                                >
+                                  {text}
+                                </span>
+                              ))}
+                              {font.detected_text.length > 8 && (
+                                <span className="text-xs text-gray-400 self-center">
+                                  +{font.detected_text.length - 8} 更多
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         {font.alternatives.length > 0 && (
                           <div className="mt-3">
                             <span className="text-xs font-semibold text-green-600">
@@ -268,7 +314,7 @@ export default function HomePage() {
               >
                 <div className="flex items-center gap-3 mb-2">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskColor(report.image_source.risk)}`}
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRiskPillColor(report.image_source.risk)}`}
                   >
                     {getRiskLabel(report.image_source.risk)}
                   </span>

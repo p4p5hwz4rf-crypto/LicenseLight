@@ -78,7 +78,7 @@ def reverse_image_search(
     image_path: str,
     google_api_key: str,
     google_cse_id: str,
-    claude_api_key: str = "",
+    api_key: str = "",
 ) -> List[dict]:
     """
     Perform a reverse image search using Google Custom Search API.
@@ -126,7 +126,7 @@ def reverse_image_search(
         domain = urlparse(url).netloc.lower()
 
         license_info = _fetch_and_parse_license(
-            url, domain, claude_api_key
+            url, domain, api_key
         )
 
         results_with_license.append(
@@ -190,7 +190,7 @@ def _google_image_search(
 def _fetch_and_parse_license(
     url: str,
     domain: str,
-    claude_api_key: str = "",
+    api_key: str = "",
 ) -> dict:
     """
     Fetch a webpage and extract license information.
@@ -213,7 +213,7 @@ def _fetch_and_parse_license(
 
     # Fallback: fetch page and use Claude
     try:
-        return _claude_license_extraction(url, claude_api_key)
+        return _claude_license_extraction(url, api_key)
     except Exception as e:
         logger.error(f"License extraction failed for {url}: {e}")
         return {
@@ -260,9 +260,9 @@ def _get_parser_map() -> dict:
     return parser_map
 
 
-def _claude_license_extraction(url: str, claude_api_key: str) -> dict:
+def _claude_license_extraction(url: str, api_key: str) -> dict:
     """Use Claude to extract license info from a webpage HTML snippet."""
-    if not claude_api_key:
+    if not api_key:
         return {
             "license_type": "unknown",
             "commercial_use": None,
@@ -270,7 +270,7 @@ def _claude_license_extraction(url: str, claude_api_key: str) -> dict:
             "summary": "No license parser available and Claude not configured.",
         }
 
-    from app.services.claude_client import call_claude_json
+    from app.services.ai_client import call_ai_json
 
     # Fetch the page HTML first
     try:
@@ -311,7 +311,7 @@ Return JSON:
 Output ONLY the JSON object."""
 
     try:
-        return call_claude_json(claude_api_key, prompt, temperature=0.1)
+        return call_ai_json(api_key, prompt, temperature=0.1)
     except Exception as e:
         logger.error(f"Claude license extraction failed: {e}")
         return {
